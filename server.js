@@ -36,7 +36,7 @@ app.use(zip());
 require("./routes/data.routes")(app);
 app.get("/", (req, res) => {
   res.send(
-    "Node Interview - Routes { /api/filter?, /api/products, /api/migrationdb, /api/process? , /api/report? }"
+    "<h1>Node Interview - Routes</h1><ul><li>/api/migrationdb -> Create a db depending of csv file</li><li>/api/products -> Retrieve all products from db</li><li>/api/filter?min=&max=&rooms -> Filter the data from db</li><li>/api/process?lat=&lon=&r= -> Process all data of database and return a average price</li><li>/api/report?min=&max=&rooms=&lat=&lon=&r=&type=</li></ul>"
   );
 
   console.log(process.env.MONGODB_URI);
