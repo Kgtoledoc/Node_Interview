@@ -1,10 +1,11 @@
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
 const express = require("express");
 const bodyParser = require("body-parser");
-const controller = require("./controllers/data.controller");
 
-const mongodb = require("mongodb").MongoClient;
 const config = require("./config");
-
 const zip = require("express-easy-zip");
 
 const app = express();
@@ -37,6 +38,8 @@ app.get("/", (req, res) => {
   res.send(
     "Node Interview - Routes { /api/filter?, /api/products, /api/migrationdb, /api/process? , /api/report? }"
   );
+
+  console.log(process.env.MONGODB_URI);
 });
 
 app.listen(app.get("port"), () => {

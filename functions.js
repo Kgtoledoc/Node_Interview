@@ -1,8 +1,8 @@
 const fs = require("fs");
 const mongodb = require("mongodb").MongoClient;
-const config = require("./config");
 const pdf = require("html-pdf");
 
+// Function to convert a csv into json
 const csvtojson = (dataHeader, dataBody) => {
   let json = [];
   let lenJson = dataHeader.length;
@@ -21,10 +21,10 @@ const csvtojson = (dataHeader, dataBody) => {
     }
     json.push(objectJson);
   }
-  //console.log(json.length);
+
   return json;
 };
-// Function to transform CSV in JSON notation
+// Function to transform CSV
 exports.dataJson = async csvPath => {
   const json = await new Promise((resolve, reject) => {
     fs.readFile(csvPath, "utf8", (err, data) => {
@@ -75,28 +75,24 @@ const rad = x => {
 // Get if the the point is inside or outside of convergence radio
 const isInside = (lat_x, lon_x, lat_y, lon_y, r, R) => {
   let dLat = rad(lat_y - lat_x);
-  //console.log(`d Lat ${dLat}`);
   let dLon = rad(lon_y - lon_x);
-  //console.log(`d Lon ${dLon}`);
   let lat1 = rad(lat_x);
-  //console.log(`Lat 1 ${lat1}`);
   let lat2 = rad(lat_y);
-  //console.log(`Lat 2 ${lat2}`);
+
   let a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
   let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   let d = R * c;
-  //console.log(`Distance: ${d.toFixed(2)}`);
-  //console.log(typeof r);
+
   if (d.toFixed(2) <= parseFloat(r)) {
-    //console.log("True");
     return true;
   }
   return false;
 };
 
+// Function to find the average of number array
 const averageArray = array => {
   let sum = array.reduce((acu, next) => {
     return acu + next;
@@ -104,19 +100,16 @@ const averageArray = array => {
   return sum / array.length;
 };
 
+// Function that return the average depending of data some parameters
 exports.averagePricePerMeter = async (lat, lon, r, data) => {
   // create a promise
   let price = await new Promise((resolve, reject) => {
-    //getDataFromDb().then(value => {
-    //console.log(data);
     let pricePerMeter = [];
     let R = 6378.137;
     for (let object of data) {
       if (isInside(lat, lon, object.Latitud, object.Longitud, r, R)) {
-        //console.log("True inside");
         pricePerMeter.push(object["Precio por metro"]);
       } else {
-        //console.log("False inside");
         continue;
       }
     }
@@ -133,10 +126,11 @@ exports.averagePricePerMeter = async (lat, lon, r, data) => {
   return price;
 };
 
+// Function used to filter data
 exports.filterData = (min, max, rooms) => {
   let filter = new Promise((resolve, reject) => {
     mongodb.connect(
-      config.url,
+      process.env.MONGODB_URI,
       {
         useNewUrlParser: true,
         useUnifiedTopology: true
@@ -151,14 +145,13 @@ exports.filterData = (min, max, rooms) => {
           min != "" &&
           max != ""
         ) {
-          //console.log("1er conditional");
           client
             .db("resource_accomodation")
             .collection("products")
             .find({ Precio: { $gte: min, $lte: max }, Habitaciones: rooms })
             .toArray((err, data) => {
               client.close();
-              //console.log(data.length);
+
               return resolve(data);
             });
         } else if (
@@ -168,56 +161,47 @@ exports.filterData = (min, max, rooms) => {
           max != "" &&
           rooms == undefined
         ) {
-          //console.log("2do conditional");
           client
             .db("resource_accomodation")
             .collection("products")
             .find({ Precio: { $gte: min, $lte: max } })
             .toArray((err, data) => {
               client.close();
-              //console.log(data.length);
-              //res.send(data);
+
               return resolve(data);
             });
         } else if (min != undefined && max == undefined && rooms == undefined) {
-          //console.log("3do conditional");
           client
             .db("resource_accomodation")
             .collection("products")
             .find({ Precio: { $gte: min } })
             .toArray((err, data) => {
               client.close();
-              //console.log(data.length);
-              //res.send(data);
+
               return resolve(data);
             });
         } else if (min == undefined && max != undefined && rooms == undefined) {
-          //console.log("4do conditional");
           client
             .db("resource_accomodation")
             .collection("products")
             .find({ Precio: { $lte: max } })
             .toArray((err, data) => {
               client.close();
-              //console.log(data.length);
-              //res.send(data);
+
               return resolve(data);
             });
         } else if (min == undefined && max == undefined && rooms != undefined) {
-          //console.log("5do conditional");
           client
             .db("resource_accomodation")
             .collection("products")
             .find({ Habitaciones: rooms })
             .toArray((err, data) => {
               client.close();
-              //console.log(data.length);
-              //res.send(data);
+
               return resolve(data);
             });
         } else {
           return resolve("No filter entered!");
-          //res.send("No filter entered!");
         }
       }
     );
@@ -225,6 +209,7 @@ exports.filterData = (min, max, rooms) => {
   return filter;
 };
 
+// Function to create pdf file
 const createPDF = (data, name) => {
   let pdfCreated = new Promise((resolve, reject) => {
     pdf.create(data).toFile(`./pdf/${name}.pdf`, (err, res) => {
@@ -235,6 +220,7 @@ const createPDF = (data, name) => {
   return pdfCreated;
 };
 
+// Function to send pdf file
 exports.sendPDF = async (data, name) => {
   let pdf = await new Promise((resolve, reject) => {
     createPDF(data, name).then(value => {
@@ -250,6 +236,7 @@ exports.sendPDF = async (data, name) => {
   return pdf;
 };
 
+// Function to create csv file
 const createCSV = async (data, name) => {
   let csvFile = await new Promise((resolve, reject) => {
     fs.writeFile(`./csv/${name}.csv`, data, (err, data) => {
@@ -262,6 +249,7 @@ const createCSV = async (data, name) => {
   return csvFile;
 };
 
+// Function used in controller to send csv file
 exports.sendCSV = async (data, name) => {
   let csv = await new Promise((resolve, reject) => {
     createCSV(data, name)

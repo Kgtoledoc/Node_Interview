@@ -1,5 +1,5 @@
 const functions = require("../functions");
-const fs = require("fs");
+
 const config = require("../config");
 const mongodb = require("mongodb").MongoClient;
 const csvjson = require("csvjson");
@@ -7,7 +7,7 @@ const csvjson = require("csvjson");
 // Retrieve all data
 exports.getInformation = (req, res) => {
   mongodb.connect(
-    config.url,
+    process.env.MONGODB_URI,
     { useNewUrlParser: true, useUnifiedTopology: true },
     (err, client) => {
       if (err) throw err;
@@ -64,12 +64,9 @@ exports.processData = (req, res) => {
   let r = req.query.r;
 
   if (lon != undefined && lat != undefined && r != undefined) {
-    //console.log("Here");
     functions
       .getDataFromDb()
       .then(data => {
-        //console.log;
-        //console.log("Here Too");
         functions
           .averagePricePerMeter(lat, lon, r, data)
           .then(value => {
@@ -88,9 +85,8 @@ exports.tranferData = (req, res) => {
   functions
     .dataJson(config.path)
     .then(dataJson => {
-      ////console.log(dataJson);
       mongodb.connect(
-        config.url,
+        process.env.MONGODB_URI,
         { useNewUrlParser: true, useUnifiedTopology: true },
         (err, client) => {
           if (err) throw err;
@@ -100,7 +96,7 @@ exports.tranferData = (req, res) => {
             .collection("products")
             .insertMany(JSON.parse(dataJson), (err, response) => {
               if (err) throw err;
-              //console.log(`Inserted: ${res.insertedCount} rows`);
+
               res.send(`Inserted: ${response.insertedCount} rows`);
               client.close();
             });
@@ -153,15 +149,12 @@ exports.reportData = (req, res) => {
         });
 
         if (type == "pdf") {
-          //console.log("pdf filter");
           functions
             .sendPDF(csvData, "filter_data")
             .then(value => {
               functions
                 .averagePricePerMeter(lat, lon, r, data)
                 .then(value => {
-                  //console.log(value);
-                  //console.log("pdf average");
                   functions
                     .sendPDF(value, "average_price")
                     .then(data => {
@@ -181,16 +174,12 @@ exports.reportData = (req, res) => {
             })
             .catch(err => res.send(err));
         } else if (type == "csv") {
-          //console.log("csv filter");
-
           functions
             .sendCSV(csvData, "filter_data")
             .then(value => {
               functions
                 .averagePricePerMeter(lat, lon, r, data)
                 .then(value => {
-                  //console.log(value);
-                  //console.log("csv average");
                   functions
                     .sendCSV(value, "average_price")
                     .then(data => {
