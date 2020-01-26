@@ -5,6 +5,7 @@ module.exports = app => {
   // http://localhost:3000/api/filter?min=1000&max=2000&rooms=4
   app.get("/api/filter", products.filter);
   // Retrieve all data of collection
+  // http://localhost:3000/
   app.get("/api/products", products.getInformation);
   // Save data in the db mongo
   app.get("/api/migrationdb", products.tranferData);

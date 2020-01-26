@@ -14,6 +14,7 @@ app.use(
     extended: true
   })
 );
+app.set("port", process.env.PORT || config.port);
 app.use(bodyParser.json());
 
 //Enable CORS for all HTTP methods
@@ -32,7 +33,12 @@ app.use(zip());
 // Connection with DB
 
 require("./routes/data.routes")(app);
+app.get("/", (req, res) => {
+  res.send(
+    "Node Interview - Routes { /api/filter?, /api/products, /api/migrationdb, /api/process? , /api/report? }"
+  );
+});
 
-app.listen(config.port, () => {
+app.listen(app.get("port"), () => {
   console.log("Server running on port 3000");
 });

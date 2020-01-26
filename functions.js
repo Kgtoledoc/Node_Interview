@@ -47,7 +47,7 @@ exports.dataJson = async csvPath => {
 exports.getDataFromDb = async () => {
   const json = await new Promise((resolve, reject) => {
     mongodb.connect(
-      config.url,
+      process.env.MONGODB_URI,
       { useNewUrlParser: true, useUnifiedTopology: true },
       (err, client) => {
         if (err) return reject(err);
