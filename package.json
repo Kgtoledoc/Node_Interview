@@ -15,7 +15,7 @@
     "express": "^4.17.1",
     "express-easy-zip": "^1.1.5",
     "express-zip": "^3.0.0",
-    "html-pdf": "^2.2.0",
+    "html-pdf": "^3.0.1",
     "mongoose": "^5.8.9",
     "nodemon": "^2.0.2",
     "pdfmake": "^0.1.63"
